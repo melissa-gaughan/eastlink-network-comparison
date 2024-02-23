@@ -5,7 +5,7 @@ library(tidyverse)
 library(sf)
 
 library(here)
-project_name <- "MSA_final"
+project_name <- "ELink_2022_phase3"
 # LOAD IN DATA ####
 block_groups_raw <- sf::read_sf(here::here("input", "2020_block_groups", "blkgrp20_shore.shp")) %>% 
   mutate(Geoid = as.numeric(GEO_ID_GRP))
@@ -54,31 +54,52 @@ quarter_mile_hex_grid <- sf::read_sf(here::here("input", "hex_grids", "quarter_m
 
 
 #route shapefiles ####
-proposed_network <- sf::read_sf("input/MSA_final_proposed/planner_var_shape.shp") %>% 
+proposed_network <- sf::read_sf("input/scenario/planner_var_shape.shp") %>% 
   rename(route_short_name = VAR_ROUTE, 
          variant = VAR_IDENT, 
          direction = VAR_DIREC, 
          description = VAR_DESCR) %>% 
-  st_set_crs(2926) %>% 
+  st_set_crs(4326) %>% 
   st_transform(4326) %>% 
   rmapshaper::ms_simplify(keep = .2)
 
-baseline_network <- sf::read_sf("input/MSA_final_baseline/planner_var_shape.shp") %>% 
+baseline_network <- sf::read_sf("input/baseline/planner_var_shape.shp") %>% 
   rename(route_short_name = VAR_ROUTE, 
          variant = VAR_IDENT, 
          direction = VAR_DIREC, 
          description = VAR_DESCR)%>% 
-  st_set_crs(2926) %>% 
+  st_set_crs(4326) %>% 
   st_transform(4326)%>% 
   rmapshaper::ms_simplify(keep = .2)
 # block group metrics #####
 network_data <- read_csv(here::here( "input", paste0(project_name,"_aggregated_trips_and_capacity_summary.csv"))) %>% 
- # select(-c(Name:`Acs Year`)) %>%  #edited file, removed EPA data. line no longer needed
+ select(-c(`Hours in Period Baseline`, `Hours in Period Proposed`)) %>%  #edited file, removed EPA data. line no longer needed
+  # mutate(`Percent Change in Avg Trips per Hour` = case_when(is.infinite(`Percent Change in Avg Trips per Hour`) & is.na(`Routes in Geo Baseline`) ~ 1,
+  #                                                           is.infinite(`Percent Change in Avg Trips per Hour`) & is.na(`Routes in Geo Proposed`) ~ -1,
+  #                                                           TRUE ~ `Percent Change in Avg Trips per Hour`)) %>% 
+  # mutate(`Percent Change in Trips` = case_when(is.infinite(`Percent Change in Trips`) & is.na(`Routes in Geo Baseline`) ~ 1,
+  #                                                           is.infinite(`Percent Change in Trips`) & is.na(`Routes in Geo Proposed`) ~ -1,
+  #                                                           TRUE ~ `Percent Change in Trips`)) %>% 
+  # 
+  # mutate(`Percent Change in Capacity` = case_when(is.infinite(`Percent Change in Capacity`) & is.na(`Routes in Geo Baseline`) ~ 1,
+  #                                              is.infinite(`Percent Change in Capacity` ) & is.na(`Routes in Geo Proposed`) ~ -1,
+  #                                              TRUE ~ `Percent Change in Capacity` )) %>%  #add new service metric??
+  
   pivot_longer(cols = !c(Geoid,  Geography, `Analysis Period`, `Day Type`, `Routes in Geo Baseline`, 
                          `Routes in Geo Proposed`), 
                names_to = "Metric", 
                values_to = "Value")
+#adding the new and lost coverage areas to the change in trips metric 
+new_and_lost_coverage <- network_data %>% 
+  filter(Metric %in% c( "New Coverage Trips", "Lost Coverage Trips")) %>% 
+  drop_na(Value) %>% 
+  mutate( Value = case_when( Metric == "Lost Coverage Trips" ~ Value *-1, 
+                             TRUE ~ Value)) %>% 
+  mutate(Metric = "Change in Trips")
 
+network_data <- bind_rows(network_data, new_and_lost_coverage)
+
+rm(new_and_lost_coverage)
 
 network_data_details <- read_csv(here::here( "input",paste0(project_name, "_route_level_trips_and_capacity_summary.csv"))) %>% 
   mutate(across(.cols = -c(Geoid ,`Percent Change in Trips`), .fns = as.character))
@@ -89,14 +110,15 @@ block_group_need_scores<- block_group_need_scores %>%
 epa_hatch <- block_groups %>%
   left_join(block_group_need_scores) %>% 
   mutate(equity_priority_area = ifelse(final_score >= 4, TRUE, FALSE)) %>%
-  filter(equity_priority_area) %>% # filter for tracts that I want to receive a cross-hatch
-  st_make_valid(geos_method = "valid_structure") %>% 
-  HatchedPolygons::hatched.SpatialPolygons(density = 700, angle = 60) %>%
+  filter(equity_priority_area) %>% 
+  st_cast( to = "MULTIPOLYGON") %>% # filter for tracts that I want to receive a cross-hatch
+ # st_make_valid(geos_method = "valid_structure") %>% 
+ gg.layers::st_hatched_polygon(density = 700, angle = 60) %>%
   st_set_crs(4326) %>%
   mutate(col = 1) 
 
 #export data objects #####
-
+rm(project_name)
 
 library(purrr)
 library(here)

@@ -20,6 +20,14 @@ library(here)
 library(leafem)
 # LOAD IN DATA ####
 source("utils.R")
+#filter NAs from hex grids when both baseline and proposed are NA
+#add new metrics : 
+  # > areas with new service #I think the coloring function is failing because it has no negative values
+  # > change in trips per hour
+  # > % change trips per hour #add # formatting to legend?
+ #test color scheme for new metrics
+  # add documentation of metrics on separate page 
+      # need to add tabs to side bar
  
 files_list <- list.files(here::here("input", "r-objects"), full.names = T)
 files_short_names <- list.files(here::here("input", "r-objects"), full.names = F)
@@ -37,30 +45,54 @@ metro <- "https://upload.wikimedia.org/wikipedia/en/thumb/b/bf/King_County_Metro
 
 day_type_choices <- unique(files$network_data$`Day Type`)
 period_choices <- unique(files$network_data$`Analysis Period`)
-metric_choices <- unique(files$network_data$Metric)
+metric_choices <- sort( unique(files$network_data$Metric))
 
-network_choices <-  c("Baseline", "Phase 2")
 
                                          
                                          # look at folder, read in folder names, remove.zip from name
 
 #UI #####
+
+
 body <- dashboardBody(
-  
-  fluidRow(
-  column(width = 6,
+  tabItems(
+    tabItem(
+      tabName = "Map", #need to wrap body in tabItems to ID which tab the values show on
+      fluidRow(
+
+  column(width = 4,
+         jqui_resizable(
+         box(title = "Map Controls", 
+             width = NULL, 
+             solidHeader = TRUE,
+             status = "warning", 
+             collapsible = T,
+
+             selectInput("geography", "Geography",
+                         choices = c("Block Groups" = "block_group",
+                                     "1/4 Mile Hex" = "quarter_mile_hex",
+                                     "1/8 Mile Hex" = "eigth_mile_hex"),
+                         selected = "quarter_mile_hex"),
+             
+             checkboxInput("legend", "Show legend", TRUE),
+             actionButton("recalc", "Load Map & Filters", class = "btn-warning")))),
+  column(width = 4,
          jqui_resizable(
          box(title = "Metric Filters", 
              width = NULL, 
              solidHeader = TRUE,
-             background = "navy",
+             status = "warning", 
              collapsible = T,
            selectInput("metric",
                        "Metric",
                        choices = metric_choices, 
                        multiple = FALSE, 
-                       selected = "Change in Trips"),
-           
+                       selected = "New Coverage Trips"),
+           sliderInput("metric_range",
+                       label = "Filter Data Range",
+                       min = -100,
+                       max = 100,
+                       value = c(-100, 100)),
            selectInput("day_type",
                        "Day",
                        choices = day_type_choices, 
@@ -75,12 +107,12 @@ body <- dashboardBody(
          )
          ),
  
-  column(width = 6,
+  column(width = 4,
          jqui_resizable(
    box( title = "Route Filters",
         width = NULL,
         solidHeader = TRUE, 
-        background = "navy",
+        status = "warning", 
         collapsible = T,
         selectInput("network",
                 "Network",
@@ -93,10 +125,8 @@ body <- dashboardBody(
                 choices = NULL, 
                 multiple = TRUE)
    )
-    ) 
-   )#,  
-  #column(width = 4,
-  ),
+   ) 
+   ),
   
   #  fluidRow(
   column(width = 12,  
@@ -105,89 +135,55 @@ body <- dashboardBody(
              id = "map_container",
            width = NULL, solidHeader = TRUE,
            jqui_resizable( leaflet::leafletOutput("metric_map")#, 
-                           #options = list(minWidth = 300)
-                           )),
-    
+                          )),
            box(width = NULL, solidHeader = TRUE,            
                jqui_resizable( tableOutput("click_info" ) 
-          #   tableOutput("breaks"),
-            # textOutput("geography")
+          
              )))
           
-        #)
+        )
 )
-    # )
-#), 
-#NOTES UI####
-# tabPanel("Notes", 
-#          fluidPage(
-#            mainPanel(
-#              h6(textOutput("note" ))
-#            ))
-# ),
-# # HEADWAY AND TRIP TABLE UI ####
-# tabPanel("Headways", 
-#          fluidPage(
-#            
-#            sidebarLayout(
-#              sidebarPanel(
-#                selectInput("network_1",
-#                            "First Service Change:",
-#                            choices = network_choices,
-#                            multiple = FALSE,
-#                            selected = "213"),
-#                selectInput("network_2",
-#                            "Second Service Change:",
-#                            choices = network_choices,
-#                            multiple = FALSE,
-#                            selected = "221"),
-#                selectInput("table_contents",
-#                            "Headways or Trips:",
-#                            choices = c("Headways", "Trips"),
-#                            multiple = FALSE,
-#                            selected = "Headways")
-#                ),
-#         
-#            mainPanel(
-#              tabsetPanel(
-#                tabPanel("First Service Change", h6(textOutput("note1" ))),
-#                tabPanel("Second Service Change",  h6(textOutput("note2" ))),
-#                tabPanel("Change Between Selected Networks",  h6(textOutput("note3" )))
-#              )
-#            )))
-# ),
-# 
-# )
 
+
+     , 
+
+tabItem( "Notes",
+         fluidRow(
+           
+           jqui_resizable(
+             box(title = "Documentation", 
+                 width = 10, 
+                 solidHeader = TRUE,
+                 status = "warning", 
+                 collapsible = F,
+                 column(width = 12,
+                        includeMarkdown("faq/help.rmd")))
+
+           )))))
 ui <- dashboardPage(
-  dashboardHeader(title = "Network Comparison App"),
- dashboardSidebar(box( title = "Execute Map", width = NULL, 
-                       background= 'navy', 
-                       solidHeader = FALSE,     collapsible = T,
-                       sliderInput("metric_range", 
-                                   label = "Filter Data Range", 
-                                   min = -100, 
-                                   max = 100,
-                                   value = c(-100, 100)),
-                       
-                       selectInput("geography", "Geography", 
-                                   choices = c("Block Groups" = "block_group",
-                                               "1/4 Mile Hex" = "quarter_mile_hex", 
-                                               "1/8 Mile Hex" = "eigth_mile_hex"), 
-                                   selected = "quarter_mile_hex"),
-                     
-                       checkboxInput("legend", "Show legend", TRUE),
-                       actionButton("recalc", "Load Map & Filters"))),
+  dashboardHeader(title = "EastLink Trip Change"),
+  sidebar =  dashboardSidebar(
+    sidebarMenu( menuItem(
+      "Map", tabName = "Map" ), 
+      menuItem( "FAQ", tabName = "Notes")
+      
+    )),
   body
 )
+
 # SERVER#####
 server <- function(input, output) {
-  #MAP FUNCTIONS #####
+ 
+  # output$markdown <- renderUI({
+  #   HTML(markdown::markdownToHTML('help.md'))
+  # }) 
+  
+   #MAP FUNCTIONS #####
       #handle route reactivity####
   
   #network selections
  network<- reactive({
-    if (input$network == "baseline"){
+    if (input$network == "Baseline"){
       network <-  files$baseline_network 
     } else if(input$network == "Final Proposal"){
       network <- files$proposed_network
@@ -216,12 +212,12 @@ server <- function(input, output) {
     if (input$day_type == "week"){
        "week" 
     } else if(input$day_type == "weekday"){
-      c("PM")
-      # c("weekday" , "AM", "MID", "PM", "XEV")
+      c("weekday", "AM", "MID", "PM", "XEV")
+      c("weekday" , "AM", "MID", "PM", "XEV")
     } else if(input$day_type == "saturday"){
-      c("MID", "XEV")
-    # }  else if(input$day_type == "sunday"){
-    #   c("sunday")
+      c("saturday", "AM", "MID", "PM", "XEV")
+    }  else if(input$day_type == "sunday"){
+        c("sunday", "AM", "MID", "PM", "XEV")
     } else{
         ""
     }
@@ -271,7 +267,7 @@ observe( {
                `Analysis Period` == input$period &
                `Day Type` == input$day_type &
                Geography  == input$geography) %>% 
-      drop_na() %>% 
+      drop_na(Value) %>% 
       mutate(Value = Value*100)
    min_range <- min(data$Value, na.rm = T)
    max_range <- max(data$Value, na.rm = T)
@@ -279,13 +275,34 @@ observe( {
                       min =min_range, 
                       max = max_range, 
                       value = c(min_range, max_range))
-  } else {
+  
+  } else if ( input$metric %in% c("New Coverage Trips" ,"Lost Coverage Trips" )){
+    
+    data <- files$network_data %>% 
+      filter(Metric == input$metric &
+               `Analysis Period` == input$period &
+               `Day Type` == input$day_type &
+               Geography  == input$geography) %>% 
+     drop_na(Value) %>% 
+      filter(!is.nan(Value)) %>% 
+      filter(!is.infinite(Value))
+    
+    min_range <- min(data$Value)
+    max_range <- max(data$Value)
+    
+    
+    updateSliderInput( inputId = "metric_range",
+                       min =min_range, 
+                       max = max_range, 
+                       value = c(min_range, max_range))
+   
+   } else {
   data <-   files$network_data %>% 
       filter(Metric == input$metric &
                `Analysis Period` == input$period &
                `Day Type` == input$day_type &
                Geography  == input$geography) %>% 
-      drop_na() 
+      drop_na(Value) 
   
   min_range <- min(data$Value, na.rm = T)
   max_range <- max(data$Value, na.rm = T)
@@ -306,7 +323,9 @@ observe( {
                `Analysis Period` == input$period &
                `Day Type` == input$day_type &
                Geography == input$geography ) %>% 
-      drop_na()  %>% 
+        drop_na(Value) %>% 
+        filter(!is.nan(Value)) %>% 
+        filter(!is.infinite(Value)) %>% 
         mutate(Value = Value*100) %>% 
         filter( Value >= input$metric_range[1] &
                   Value <= input$metric_range[2] )
@@ -344,7 +363,9 @@ observe( {
                `Analysis Period` == input$period &
                `Day Type` == input$day_type &
                  Geography == input$geography ) %>% 
-        drop_na() %>% 
+        drop_na(Value) %>% 
+        filter(!is.nan(Value)) %>% 
+        filter(!is.infinite(Value)) %>% 
         filter( Value >= input$metric_range[1] &
                   Value <= input$metric_range[2])
       
@@ -383,21 +404,21 @@ observe( {
     if(input$geography == "block_group"){
     block_groups <- files$block_groups %>% 
       left_join(metric_data(), by = "Geoid") %>% 
-      drop_na(Value) %>% 
-      filter(Value != 0) %>% 
+     drop_na(Value) %>%
+    filter(Value != 0) %>%
       sf::st_as_sf() #added because R was making this a table not a spatial object
     } else if (input$geography == "quarter_mile_hex" ){
       quarter_mile <- files$quarter_mile_hex_grid %>% 
         left_join(metric_data(), by = "Geoid") %>% 
-        drop_na(Value) %>% 
-        filter(Value != 0) %>% 
+      drop_na(Value) %>%
+       filter(Value != 0) %>%
         sf::st_as_sf()
       
     } else if (input$geography == "eigth_mile_hex" ){
       eigth_mile <- files$eigth_mile_hex_grid %>% 
         left_join(metric_data(), by = "Geoid") %>% 
-        drop_na(Value) %>% 
-        filter(Value != 0) %>% 
+       drop_na(Value) %>%
+       filter(Value != 0) %>%
         sf::st_as_sf()
     }
   },  ignoreNULL = FALSE)
@@ -581,9 +602,9 @@ output$click_info <- renderTable(metric_data_detail())
     
   # NOTES SERVER #####
   
-  output$note <- renderText("This app shows the difference in vehicle trips and vehicle capacity for the Madison Street Area Final Proposal.
+  output$note <- renderText("This app shows the difference in vehicle trips and vehicle capacity for the EastLink Restructure 2022 Final Proposal.
 This tool is for planning purposes only and does not show final data.
-Please contact Melissa Gaughan with questions. Last updated 2023.10.25.")
+Please contact Melissa Gaughan with questions. Last updated 2023.11.30.")
   
  
   #TABLE FUNCTIONS #####  
