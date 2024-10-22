@@ -18,6 +18,8 @@ library(sf)
 library(rsconnect)
 library(here)
 library(leafem)
+library(markdown)
+library(shinyalert)
 # LOAD IN DATA ####
 source("utils.R")
 #filter NAs from hex grids when both baseline and proposed are NA
@@ -87,7 +89,7 @@ body <- dashboardBody(
                        "Metric",
                        choices = metric_choices, 
                        multiple = FALSE, 
-                       selected = "New Coverage Trips"),
+                       selected = "Change in Trips"),
            sliderInput("metric_range",
                        label = "Filter Data Range",
                        min = -100,
@@ -650,7 +652,25 @@ Please contact Melissa Gaughan with questions. Last updated 2023.11.30.")
   
  # output$geography <- renderText(paste0(input$geography))
 
- 
+  shinyalert(
+    title = "East Link Connections Phase 4 Trip Change Tool",
+    text = ("<b>Visit the FAQ page!</b> </br>This app compares the scheduled transit trips in the ELC proposed network to Spring 2024 transit service."),
+    
+    size = "s", 
+    closeOnEsc = TRUE,
+    closeOnClickOutside = TRUE,
+    html = TRUE,
+    type = "",
+    showConfirmButton = TRUE,
+    showCancelButton = FALSE,
+    confirmButtonText = "OK",
+    confirmButtonCol = "#AEDEF4",
+    timer = 0,
+    imageUrl = metro,
+    animation = TRUE
+  )
+  
+  
 }
 
 # Run the application 

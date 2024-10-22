@@ -5,7 +5,7 @@ library(tidyverse)
 library(sf)
 
 library(here)
-project_name <- "ELink_2022_phase3"
+project_name <- "ELink_Ph4"
 # LOAD IN DATA ####
 block_groups_raw <- sf::read_sf(here::here("input", "2020_block_groups", "blkgrp20_shore.shp")) %>% 
   mutate(Geoid = as.numeric(GEO_ID_GRP))
@@ -59,7 +59,7 @@ proposed_network <- sf::read_sf("input/scenario/planner_var_shape.shp") %>%
          variant = VAR_IDENT, 
          direction = VAR_DIREC, 
          description = VAR_DESCR) %>% 
-  st_set_crs(4326) %>% 
+  #st_set_crs(4326) %>% 
   st_transform(4326) %>% 
   rmapshaper::ms_simplify(keep = .2)
 
@@ -68,7 +68,7 @@ baseline_network <- sf::read_sf("input/baseline/planner_var_shape.shp") %>%
          variant = VAR_IDENT, 
          direction = VAR_DIREC, 
          description = VAR_DESCR)%>% 
-  st_set_crs(4326) %>% 
+  #st_set_crs(4326) %>% 
   st_transform(4326)%>% 
   rmapshaper::ms_simplify(keep = .2)
 # block group metrics #####
