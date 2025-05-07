@@ -5,7 +5,7 @@ library(tidyverse)
 library(sf)
 
 library(here)
-project_name <- "ELink_Ph4"
+project_name <- "SLC_Ph2"
 # LOAD IN DATA ####
 block_groups_raw <- sf::read_sf(here::here("input", "2020_block_groups", "blkgrp20_shore.shp")) %>% 
   mutate(Geoid = as.numeric(GEO_ID_GRP))
@@ -53,7 +53,7 @@ quarter_mile_hex_grid <- sf::read_sf(here::here("input", "hex_grids", "quarter_m
   st_transform(4326)
 
 
-#route shapefiles ####
+#elc route shapefiles ####
 proposed_network <- sf::read_sf("input/scenario/planner_var_shape.shp") %>% 
   rename(route_short_name = VAR_ROUTE, 
          variant = VAR_IDENT, 
@@ -71,6 +71,20 @@ baseline_network <- sf::read_sf("input/baseline/planner_var_shape.shp") %>%
   #st_set_crs(4326) %>% 
   st_transform(4326)%>% 
   rmapshaper::ms_simplify(keep = .2)
+
+#slc ph2 route shapefiles ####
+proposed_network <- sf::read_sf("input/scenario/slc_ph2_proposed_gtfs.shp") %>% 
+  rename(route_short_name = route_shor,
+         description = route_long) %>%
+  st_transform(4326) %>% 
+  rmapshaper::ms_simplify(keep = .2)
+
+baseline_network <- sf::read_sf("input/baseline/slc_ph2_baseline_gtfs.shp") %>% 
+  rename(route_short_name = route_shor,
+         description = route_long) %>%
+  st_transform(4326) %>% 
+  rmapshaper::ms_simplify(keep = .2)
+
 # block group metrics #####
 network_data <- read_csv(here::here( "input", paste0(project_name,"_aggregated_trips_and_capacity_summary.csv"))) %>% 
  select(-c(`Hours in Period Baseline`, `Hours in Period Proposed`)) %>%  #edited file, removed EPA data. line no longer needed
@@ -104,6 +118,8 @@ rm(new_and_lost_coverage)
 network_data_details <- read_csv(here::here( "input",paste0(project_name, "_route_level_trips_and_capacity_summary.csv"))) %>% 
   mutate(across(.cols = -c(Geoid ,`Percent Change in Trips`), .fns = as.character))
 
+names(network_data_details)[2:3] <- c('Route', 'Route Name')
+
 block_group_need_scores<- block_group_need_scores %>% 
   mutate(Geoid = as.numeric(Geoid))
 
@@ -125,7 +141,7 @@ library(here)
 
 object_saver <- function(object_name) {
   object <- get(object_name)
-  saveRDS(object, here::here("input", "r-objects", paste0(object_name, ".RDS")))
+  saveRDS(object, here::here("input", "slc-eir", paste0(object_name, ".RDS")))
 
 }
 

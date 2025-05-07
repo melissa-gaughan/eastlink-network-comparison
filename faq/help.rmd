@@ -7,11 +7,11 @@ theme: flatly
 editor: visual
 ---
 
-# East Link Trip Change Dashboard
+# South Link Trip Change Dashboard
 
 ## About
 
-This dashboard shows the anticipated level of change in trip volumes for 2022 East Link network as compared to service levels in Fall 2021. We chose Fall 2021 as the baseline comparison point because it includes the NorthLink service restructure. We also added back service that was suspended due to Covid-19.
+This dashboard shows the anticipated level of change in trip volumes for the South Link network as compared to service levels in Fall 2024. We chose Fall 2024 as the baseline comparison point because it includes the Lynnwood Link service restructure.
 
 ## Using the Dashboard
 

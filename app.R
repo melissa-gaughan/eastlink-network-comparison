@@ -31,8 +31,8 @@ source("utils.R")
   # add documentation of metrics on separate page 
       # need to add tabs to side bar
  
-files_list <- list.files(here::here("input", "r-objects"), full.names = T)
-files_short_names <- list.files(here::here("input", "r-objects"), full.names = F)
+files_list <- list.files(here::here("input", "slc-eir"), full.names = T)
+files_short_names <- list.files(here::here("input", "slc-eir"), full.names = F)
 file_names <-  gsub(pattern = "\\.RDS$", replacement = "", x = basename(files_short_names))
 
 
@@ -604,9 +604,9 @@ output$click_info <- renderTable(metric_data_detail())
     
   # NOTES SERVER #####
   
-  output$note <- renderText("This app shows the difference in vehicle trips and vehicle capacity for the EastLink Restructure 2022 Final Proposal.
+  output$note <- renderText("This app shows the difference in vehicle trips and vehicle capacity for the SouthLink Restructure Phase 2 Proposal.
 This tool is for planning purposes only and does not show final data.
-Please contact Melissa Gaughan with questions. Last updated 2023.11.30.")
+Please contact Melissa Gaughan with questions. Last updated 2024.10.29.")
   
  
   #TABLE FUNCTIONS #####  
@@ -653,8 +653,8 @@ Please contact Melissa Gaughan with questions. Last updated 2023.11.30.")
  # output$geography <- renderText(paste0(input$geography))
 
   shinyalert(
-    title = "East Link Connections Phase 4 Trip Change Tool",
-    text = ("<b>Visit the FAQ page!</b> </br>This app compares the scheduled transit trips in the ELC proposed network to Spring 2024 transit service."),
+    title = "South Link Connections Phase 2 Trip Change Tool",
+    text = ("<b>Visit the FAQ page!</b> </br>This app compares the scheduled transit trips in the SLC proposed network to Fall 2024 transit service."),
     
     size = "s", 
     closeOnEsc = TRUE,
