@@ -604,9 +604,9 @@ output$click_info <- renderTable(metric_data_detail())
     
   # NOTES SERVER #####
   
-  output$note <- renderText("This app shows the difference in vehicle trips and vehicle capacity for the SouthLink Restructure Phase 2 Proposal.
+  output$note <- renderText("This app shows the difference in vehicle trips and vehicle capacity for the SouthLink Restructure Phase 3 Proposal.
 This tool is for planning purposes only and does not show final data.
-Please contact Melissa Gaughan with questions. Last updated 2024.10.29.")
+Please contact Melissa Gaughan with questions. Last updated 2025.05.02.")
   
  
   #TABLE FUNCTIONS #####  
@@ -653,7 +653,7 @@ Please contact Melissa Gaughan with questions. Last updated 2024.10.29.")
  # output$geography <- renderText(paste0(input$geography))
 
   shinyalert(
-    title = "South Link Connections Phase 2 Trip Change Tool",
+    title = "South Link Connections Phase 3 Trip Change Tool",
     text = ("<b>Visit the FAQ page!</b> </br>This app compares the scheduled transit trips in the SLC proposed network to Fall 2024 transit service."),
     
     size = "s", 

@@ -5,7 +5,7 @@ library(tidyverse)
 library(sf)
 
 library(here)
-project_name <- "SLC_Ph2"
+project_name <- "SLC_Ph3"
 # LOAD IN DATA ####
 block_groups_raw <- sf::read_sf(here::here("input", "2020_block_groups", "blkgrp20_shore.shp")) %>% 
   mutate(Geoid = as.numeric(GEO_ID_GRP))
@@ -73,13 +73,13 @@ baseline_network <- sf::read_sf("input/baseline/planner_var_shape.shp") %>%
   rmapshaper::ms_simplify(keep = .2)
 
 #slc ph2 route shapefiles ####
-proposed_network <- sf::read_sf("input/scenario/slc_ph2_proposed_gtfs.shp") %>% 
+proposed_network <- sf::read_sf("input/scenario/slc_ph3_proposed_gtfs.shp") %>% 
   rename(route_short_name = route_shor,
          description = route_long) %>%
   st_transform(4326) %>% 
   rmapshaper::ms_simplify(keep = .2)
 
-baseline_network <- sf::read_sf("input/baseline/slc_ph2_baseline_gtfs.shp") %>% 
+baseline_network <- sf::read_sf("input/baseline/slc_ph3_baseline_gtfs.shp") %>% 
   rename(route_short_name = route_shor,
          description = route_long) %>%
   st_transform(4326) %>% 
